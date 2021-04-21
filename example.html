@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>webrtc - host</title>
+</head>
+<body>
+    <div>
+        <input id="message" />
+        <button onclick="send_message()">Send</button>
+        <h1>Messages</h1>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        const id = "12345";
+        const socket = new WebSocket("ws://localhost:8080");
+        const rtc = new RTCPeerConnection();
+
+        socket.onmessage = event => {
+            const message = JSON.parse(event.data);
+
+            if (message.type === "make_offer") {
+                make_offer();
+            }
+            if (message.type === "make_answer") {
+                make_answer(message.data);
+            }
+            if (message.type === "accept_answer") {
+                accept_answer(message.data);
+            }
+        };
+        socket.onopen = _ => {
+            socket.send(JSON.stringify({
+                type: "connect",
+                data: id,
+            }));
+        };
+
+        rtc.ondatachannel = event => {
+            rtc.channel = event.channel;
+            rtc.channel.onmessage = event => {
+                print_message(event.data);
+            };
+        };
+
+        async function make_offer() {
+            rtc.channel = rtc.createDataChannel('data');
+            rtc.channel.onmessage = event => {
+                print_message(event.data);
+            };
+
+            let timeout = null;
+            rtc.onicecandidate = event => {
+                if (!event.candidate) {
+                    if (timeout) {
+                        clearTimeout(timeout);
+                    }
+
+                    timeout = setTimeout(() => {
+                        socket.send(JSON.stringify({
+                            type: "offer",
+                            data: rtc.localDescription,
+                        }));
+                    }, 100);
+                }
+            };
+
+            const offer = await rtc.createOffer();
+            await rtc.setLocalDescription(offer);
+        }
+
+        async function make_answer(offer) {
+            await rtc.setRemoteDescription(offer);
+
+            let timeout = null;
+            rtc.onicecandidate = event => {
+                if (!event.candidate) {
+                    if (timeout) {
+                        clearTimeout(timeout);
+                    }
+
+                    timeout = setTimeout(() => {
+                        socket.send(JSON.stringify({
+                            type: "answer",
+                            data: rtc.localDescription,
+                        }));
+
+                        socket.close();
+                    }, 100);
+                }
+            };
+            
+            const answer = await rtc.createAnswer();
+            await rtc.setLocalDescription(answer);
+        }
+
+        async function accept_answer(answer) {
+            await rtc.setRemoteDescription(answer);
+            socket.close();
+        }
+
+
+
+        function send_message() {
+            const message = document.getElementById("message").value;
+            print_message(message);
+            rtc.channel.send(message);
+        }
+
+        function print_message(message) {
+            const element = document.createElement("p");
+            element.innerText = message;
+
+            document.getElementById("messages").appendChild(element);
+        }
+    </script>
+</body>
+</html>
