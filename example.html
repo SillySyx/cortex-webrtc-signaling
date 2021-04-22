@@ -104,7 +104,10 @@
 
         function send_message() {
             const message = document.getElementById("message").value;
+            document.getElementById("message").value = "";
+
             print_message(message);
+            
             rtc.channel.send(message);
         }
 
