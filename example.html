@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>webrtc - host</title>
+    <title>webrtc</title>
 </head>
 <body>
     <div>
@@ -14,7 +14,7 @@
 
     <script>
         const id = "12345";
-        const socket = new WebSocket("wss://localhost:5001/webrtc-signaling");
+        const socket = new WebSocket("ws://localhost:5000/webrtc-signaling");
         const rtc = new RTCPeerConnection();
 
         socket.onmessage = event => {
