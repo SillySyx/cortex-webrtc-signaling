@@ -14,7 +14,7 @@
 
     <script>
         const id = "12345";
-        const socket = new WebSocket("ws://localhost:5000/webrtc-signaling");
+        const socket = new WebSocket("ws://webrtc.norwayeast.azurecontainer.io");
         const rtc = new RTCPeerConnection();
 
         socket.onmessage = event => {
@@ -24,17 +24,16 @@
                 make_offer();
             }
             if (message.type === "make_answer") {
-                make_answer(JSON.parse(message.data));
+                make_answer(message.data);
             }
             if (message.type === "accept_answer") {
-                accept_answer(JSON.parse(message.data));
+                accept_answer(message.data);
             }
         };
         socket.onopen = _ => {
             socket.send(JSON.stringify({
-                id: id,
                 type: "connect",
-                data: "",
+                data: id,
             }));
         };
 
@@ -43,12 +42,20 @@
             rtc.channel.onmessage = event => {
                 print_message(event.data);
             };
+            rtc.channel.onopen = event => {
+                socket.close();
+                print_message("connected!");
+            };
         };
 
         async function make_offer() {
             rtc.channel = rtc.createDataChannel('data');
             rtc.channel.onmessage = event => {
                 print_message(event.data);
+            };
+            rtc.channel.onopen = event => {
+                socket.close();
+                print_message("connected!");
             };
 
             let timeout = null;
@@ -60,9 +67,8 @@
 
                     timeout = setTimeout(() => {
                         socket.send(JSON.stringify({
-                            id: id,
                             type: "offer",
-                            data: JSON.stringify(rtc.localDescription),
+                            data: rtc.localDescription,
                         }));
                     }, 100);
                 }
@@ -84,12 +90,9 @@
 
                     timeout = setTimeout(() => {
                         socket.send(JSON.stringify({
-                            id: id,
                             type: "answer",
-                            data: JSON.stringify(rtc.localDescription),
+                            data: rtc.localDescription,
                         }));
-
-                        socket.close();
                     }, 100);
                 }
             };
@@ -100,7 +103,6 @@
 
         async function accept_answer(answer) {
             await rtc.setRemoteDescription(answer);
-            socket.close();
         }
 
 

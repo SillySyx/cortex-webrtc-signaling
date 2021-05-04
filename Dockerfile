@@ -1,12 +1,11 @@
-FROM mcr.microsoft.com/dotnet/sdk:5.0
+FROM node:alpine
 	WORKDIR /app
-	ENV ASPNETCORE_URLS=http://+:80;https://+:443
-	EXPOSE 80
-	EXPOSE 443
 
-	COPY src/websocket-server.csproj ./
-	RUN dotnet restore
+	ADD src/package.json /app
+	ADD src/index.js /app
 
-	COPY src/* ./
+	RUN npm i
 
-	ENTRYPOINT ["dotnet", "run"]
+	EXPOSE 8080
+
+	ENTRYPOINT ["node", "index.js"]
