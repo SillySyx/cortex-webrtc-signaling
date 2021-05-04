@@ -1,9 +1,0 @@
-{
-  "name": "webrtc-signal-server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "dependencies": {
-    "ws": "^7.4.5"
-  }
-}

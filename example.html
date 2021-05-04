@@ -14,7 +14,7 @@
 
     <script>
         const id = "12345";
-        const socket = new WebSocket("ws://localhost:8080");
+        const socket = new WebSocket("wss://localhost:5001/webrtc-signaling");
         const rtc = new RTCPeerConnection();
 
         socket.onmessage = event => {
@@ -24,16 +24,17 @@
                 make_offer();
             }
             if (message.type === "make_answer") {
-                make_answer(message.data);
+                make_answer(JSON.parse(message.data));
             }
             if (message.type === "accept_answer") {
-                accept_answer(message.data);
+                accept_answer(JSON.parse(message.data));
             }
         };
         socket.onopen = _ => {
             socket.send(JSON.stringify({
+                id: id,
                 type: "connect",
-                data: id,
+                data: "",
             }));
         };
 
@@ -59,8 +60,9 @@
 
                     timeout = setTimeout(() => {
                         socket.send(JSON.stringify({
+                            id: id,
                             type: "offer",
-                            data: rtc.localDescription,
+                            data: JSON.stringify(rtc.localDescription),
                         }));
                     }, 100);
                 }
@@ -82,8 +84,9 @@
 
                     timeout = setTimeout(() => {
                         socket.send(JSON.stringify({
+                            id: id,
                             type: "answer",
-                            data: rtc.localDescription,
+                            data: JSON.stringify(rtc.localDescription),
                         }));
 
                         socket.close();
