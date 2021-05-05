@@ -6,6 +6,6 @@ FROM node:alpine
 
 	RUN npm i
 
-	EXPOSE 8080
+	EXPOSE 443
 
 	ENTRYPOINT ["node", "index.js"]
