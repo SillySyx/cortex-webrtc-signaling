@@ -1,6 +1,6 @@
 const { Server } = require('ws');
 
-const server = new Server({ port: 443 }, () => {
+const server = new Server({ port: process.env.PORT || 3000 }, () => {
     console.log("websocket server started");
 });
 

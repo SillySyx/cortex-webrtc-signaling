@@ -1,8 +1,8 @@
 FROM node:alpine
 	WORKDIR /app
 
-	ADD src/package.json /app
-	ADD src/index.js /app
+	ADD package.json /app
+	ADD index.js /app
 
 	RUN npm i
 
